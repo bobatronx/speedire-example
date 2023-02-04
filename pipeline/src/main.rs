@@ -1,21 +1,23 @@
 use speedire::toolfs;
 use speedire::poetry_setup::Poetry;
 use speedire::kubectl_setup::Kubectl;
-use speedire::toolfs::Tool;
+use speedire::toolfs::{Tool, BuilderTool, DeployerTool};
 
 fn main() {
-    toolfs::initialize().unwrap();
+    toolfs::initialize()
+    .expect("unable to initialize");
     
     let poetry = Poetry::default();
-    poetry.configure().unwrap();
-    poetry.execute_with_args(&["update"]).unwrap();
-    poetry.execute("build").unwrap();
-    poetry.execute_with_args(&["run", "--", "pytest"]).unwrap();
+    poetry.configure()
+    .and(poetry.build())
+    .expect("unable to execute poetry build");
     
     let kubectl = Kubectl::default();
-    kubectl.configure().unwrap();
-    kubectl.set_namespace("speedire").unwrap();
-    kubectl.execute_with_args(&["apply", "-f", "../k8s/deployment.yaml"]).unwrap();
+    kubectl.configure()
+    .and(kubectl.set_namespace("speedire"))
+    .and(kubectl.deploy(&["apply", "-f", "k8s/deployment.yaml"]))
+    .expect("unable to execute kubectl");
 
-    toolfs::cleanup().unwrap();
+    toolfs::cleanup()
+    .expect("unable to cleanup");
 }
