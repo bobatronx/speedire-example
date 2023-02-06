@@ -689,7 +689,7 @@ dependencies = [
 [[package]]
 name = "speedire"
 version = "0.1.0"
-source = "git+https://github.com/bobatronx/speedire?branch=main#d035b5364ba4b0e51a3422bd4155bc8c38cb948b"
+source = "git+https://github.com/bobatronx/speedire?branch=main#9c04793cddb77e2d3c0c372b2fdc112f45c4beec"
 dependencies = [
  "flate2",
  "home",
