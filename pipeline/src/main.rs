@@ -1,37 +1,33 @@
-use speedire::toolfs;
-use speedire::poetry_setup::{PoetryCommandBuilder};
-use speedire::pipelines::{BuildPipelineBuilder, DeployPipelineBuilder};
-use speedire::kubectl_setup::{KubectlCommandBuilder};
-use speedire::pipelines::{PipelineBuilder, PipelineDeployer};
+use speedire::pipelines::Speedire;
+use speedire::pipelines::PipelineBuilder;
+use speedire::commands::poetry::PoetryCommandBuilder;
+use speedire::commands::kubectl::KubectlCommandBuilder;
+use speedire::pipelines::PipelineDeployer;
+
 
 fn main() {
-    toolfs::initialize()
-    .expect("unable to initialize");
     
-    // Create build command
-    let poetry_command = PoetryCommandBuilder::new()
-    .compile();
-
-    // Run Build
-    BuildPipelineBuilder::new()
-    .step(Box::new(poetry_command))
+    Speedire::new()
+    .builder()
+    .step(Box::new(
+        PoetryCommandBuilder::new()
+        .compile()
+    ))
     .compile()
     .build()
-    .expect("build failed");
+    .expect("unable to run poetry build");
 
-    // Create deploy command
-    let kubectl_command = KubectlCommandBuilder::new()
-    .namespace("speedire")
-    .apply("k8s/deployment.yaml")
-    .compile();
-
-    // Run Deploy
-    DeployPipelineBuilder::new()
-    .step(Box::new(kubectl_command))
+    Speedire::new()
+    .deployer()
+    .step(Box::new(
+        KubectlCommandBuilder::new()
+        .namespace("speedire")
+        .apply("k8s/deployment.yaml")
+        .compile()
+    ))
     .compile()
     .deploy()
-    .expect("build failed");
-    
-    toolfs::cleanup()
-    .expect("unable to cleanup");
+    .expect("unable to run kubectl apply");
+
+    Speedire::destroy();
 }
